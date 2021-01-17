@@ -1,0 +1,9 @@
+kubectl get networkpolicy
+
+kubectl describe networkpolicy inventory-policy
+kubectl label pod web-gateway inventory-access=true
+kubectl exec web-gateway -- curl -m 3 inventory-svc
+
+kubectl describe networkpolicy customer-data-policy
+kubectl label pod web-gateway customer-data-access=true
+kubectl exec web-gateway -- curl -m 3 customer-data-svc

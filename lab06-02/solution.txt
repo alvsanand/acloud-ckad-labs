@@ -1,0 +1,33 @@
+cat | kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-svc
+spec:
+  type: NodePort
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80
+EOF
+
+curl $(kubectl get service auth-svc -o jsonpath="{.spec.clusterIP}"):8080
+
+cat | kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: data
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80
+EOF
+
+curl $(kubectl get service data-svc -o jsonpath="{.spec.clusterIP}"):8080

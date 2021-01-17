@@ -1,0 +1,16 @@
+sudo apt isntall -y jq
+
+kubectl get pods --all-namespaces -o json -o json | jq -r '.items[] | select(.status.containerStatuses[-1].ready==false) | .metadata.name' > /home/cloud_user/debug/broken-pod-name.txt
+
+
+NS=$(kubectl get pods --all-namespaces -o json -o json | jq -r '.items[] | select(.status.containerStatuses[-1].ready==false) | .metadata.namespace')
+kubectl top pod -n $NS | sed -n 2p |  tr -s ' ' | cut -d ' ' -f1 > /home/cloud_user/debug/high-cpu-pod-name.txt
+
+
+POD_NAME=$(kubectl get pods --all-namespaces -o json -o json | jq -r '.items[] | select(.status.containerStatuses[-1].ready==false) | .metadata.name')
+kubectl get pod -n $NS $POD_NAME -o json --export > /home/cloud_user/debug/broken-pod-summary.json
+
+
+kubectl get pod -n $NS $POD_NAME -o yaml --export | sed 's/ealthz/healthz/' > /home/cloud_user/debug/broken-pod-summary.good.yml
+kubectl delete pod -n $NS $POD_NAME
+kubectl apply -n $NS -f /home/cloud_user/debug/broken-pod-summary.good.yml

@@ -1,0 +1,18 @@
+cat | kubectl apply -f - <<EOF
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cleanup-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: linuxacademycontent/data-cleanup:1
+          restartPolicy: OnFailure
+EOF
+
+kubectl get cronjob cleanup-cronjob
