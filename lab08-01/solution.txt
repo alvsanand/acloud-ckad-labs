@@ -1,0 +1,55 @@
+cat | kubectl apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+spec:
+  storageClassName: localdisk
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+EOF
+
+cat | kubectl apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+  storageClassName: localdisk
+EOF
+
+cat | kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-pod
+spec:
+  containers:
+    - name: mysql
+      image: mysql:5.6
+      volumeMounts:
+      - mountPath: "/var/lib/mysql"
+        name: my-volume
+      ports:
+        - containerPort: 3306
+      env:
+      - name: MYSQL_ROOT_PASSWORD
+        value: MYSQL_ROOT_PASSWORD
+  volumes:
+    - name: my-volume
+      persistentVolumeClaim:
+        claimName: mysql-pv-claim
+EOF
+
+ssh cloud_user@10.0.1.102
+
+ls -la /mnt/data/
