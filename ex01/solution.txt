@@ -1,0 +1,53 @@
+cat | kubectl apply -n pizza -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pizza-deployment
+  labels:
+    app: pizza
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pizza
+  template:
+    metadata:
+      labels:
+        app: pizza
+    spec:
+      containers:
+      - name: nginx
+        image: linuxacademycontent/pizza-service:1.14.6
+        ports:
+        - containerPort: 80
+        command: ['nginx']
+        args: ["-g", "daemon off;"]
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 3
+          periodSeconds: 3
+EOF
+
+cat | kubectl apply -n pizza -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: pizza-service
+  namespace: pizza
+spec:
+  type: NodePort
+  selector:
+    app: pizza
+  ports:
+  - protocol: TCP
+    port: 80
+    nodePort: 30080
+EOF
